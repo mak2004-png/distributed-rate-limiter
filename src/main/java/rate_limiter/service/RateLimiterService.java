@@ -1,8 +1,10 @@
 package rate_limiter.service;
 
+import org.springframework.stereotype.Service;
 import rate_limiter.bucket.TokenBucket;
-
 import java.util.concurrent.ConcurrentHashMap;
+
+@Service
 
 public class RateLimiterService {
 
