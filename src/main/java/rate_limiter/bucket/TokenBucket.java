@@ -17,7 +17,7 @@ public class TokenBucket {
     this.lastRefillTimeStamp = Instant.now();
     }
 
-    private void refill(){
+    private synchronized void refill(){
 
         Instant start = lastRefillTimeStamp;
         Instant now = Instant.now();
@@ -31,7 +31,7 @@ public class TokenBucket {
         this.lastRefillTimeStamp = now;
     }
 // race condition can occur in this method for now we'll fix it later while testing
-    public boolean tryConsume(){
+    public synchronized boolean tryConsume(){
         refill();
         if (currentTokens >= 1){
             currentTokens -= 1;
