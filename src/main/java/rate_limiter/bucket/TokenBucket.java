@@ -10,11 +10,11 @@ public class TokenBucket {
     private long currentTokens;
     private Instant lastRefillTimeStamp;
 
-    public TokenBucket(long capacity, long refillRate){
+    public TokenBucket(long capacity, long refillRate, long currentTokens, Instant lastRefillTimeStamp){
     this.capacity = capacity;
     this.refillRate = refillRate;
-    this.currentTokens = capacity;
-    this.lastRefillTimeStamp = Instant.now();
+    this.currentTokens = currentTokens;
+    this.lastRefillTimeStamp = lastRefillTimeStamp;
     }
 
     private synchronized void refill(){
@@ -30,7 +30,6 @@ public class TokenBucket {
         this.currentTokens = newTokensCount;
         this.lastRefillTimeStamp = now;
     }
-// race condition can occur in this method for now we'll fix it later while testing
     public synchronized boolean tryConsume(){
         refill();
         if (currentTokens >= 1){
@@ -40,5 +39,13 @@ public class TokenBucket {
         else {
             return false;
         }
+    }
+// getters so that redis can get the actual value out from here
+    public long getCurrentTokens() {
+        return currentTokens;
+    }
+
+    public Instant getLastRefillTimeStamp() {
+        return lastRefillTimeStamp;
     }
 }
