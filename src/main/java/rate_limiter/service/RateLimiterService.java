@@ -1,39 +1,39 @@
 package rate_limiter.service;
 
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
-import rate_limiter.bucket.TokenBucket;
 
 import java.time.Instant;
-import java.util.Map;
+import java.util.Collections;
+import java.util.List;
+
 
 @Service
 
 public class RateLimiterService {
 
-    RedisTemplate<String, Object> redisTemplate;
+    private final RedisScript<Long> tokenBucketScripts =
+            RedisScript.of(new ClassPathResource("token_bucket.lua"), Long.class );
+    RedisTemplate redisTemplate;
 
-    public RateLimiterService(RedisTemplate<String, Object> redisTemplate) {
+    public RateLimiterService(RedisTemplate redisTemplate) {
     this.redisTemplate = redisTemplate;
     }
 
     public boolean allowRequest(String clientId){
-        Map<Object, Object> existingData = redisTemplate.opsForHash().entries(clientId);
+        long currentTimestamp = Instant.now().getEpochSecond();
+        List<String> keys = Collections.singletonList(clientId);
 
-        TokenBucket bucket;
-
-        if (existingData.isEmpty()){
-            bucket = new TokenBucket(10, 5, 10, Instant.now());
-        }
-        else {
-            long existingTokens = Long.parseLong(existingData.get("tokens").toString());
-            Instant existingTimestamp = Instant.parse(existingData.get("lastRefill").toString());
-            bucket = new TokenBucket(10, 5, existingTokens, existingTimestamp);
-        }
-        boolean allowed = bucket.tryConsume();
-        redisTemplate.opsForHash().put(clientId, "tokens", String.valueOf(bucket.getCurrentTokens()));
-        redisTemplate.opsForHash().put(clientId, "lastRefill", bucket.getLastRefillTimeStamp().toString());
-        return allowed;
-
+        Long result = (Long) redisTemplate.execute(
+                tokenBucketScripts,
+                keys,
+                String.valueOf(currentTimestamp),
+                String.valueOf(10),
+                String.valueOf(5)
+        );
+        return result == 1;
     }
+
 }
