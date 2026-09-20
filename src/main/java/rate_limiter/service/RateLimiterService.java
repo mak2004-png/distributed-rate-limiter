@@ -2,6 +2,7 @@ package rate_limiter.service;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
 
@@ -16,14 +17,14 @@ public class RateLimiterService {
 
     private final RedisScript<Long> tokenBucketScripts =
             RedisScript.of(new ClassPathResource("token_bucket.lua"), Long.class );
-    RedisTemplate redisTemplate;
+    StringRedisTemplate redisTemplate;
 
-    public RateLimiterService(RedisTemplate redisTemplate) {
+    public RateLimiterService(StringRedisTemplate redisTemplate) {
     this.redisTemplate = redisTemplate;
     }
 
     public boolean allowRequest(String clientId){
-        long currentTimestamp = Instant.now().getEpochSecond();
+        long currentTimestamp = Instant.now().toEpochMilli();
         List<String> keys = Collections.singletonList(clientId);
 
         Long result = (Long) redisTemplate.execute(
@@ -31,7 +32,7 @@ public class RateLimiterService {
                 keys,
                 String.valueOf(currentTimestamp),
                 String.valueOf(10),
-                String.valueOf(5)
+                String.valueOf(1)
         );
         return result == 1;
     }

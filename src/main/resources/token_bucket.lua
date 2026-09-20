@@ -4,7 +4,7 @@ local refillRate = ARGV[3]
 local tokens = redis.call('HGET', KEYS[1], 'tokens')
 local lastRefill = redis.call('HGET', KEYS[1], 'lastRefill')
 
-if tokens == nil then
+if not tokens then
 tokens = capacity
 lastRefill = currentTimestamp
 end

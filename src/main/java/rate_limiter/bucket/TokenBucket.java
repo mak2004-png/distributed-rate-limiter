@@ -1,5 +1,7 @@
-package rate_limiter.bucket;
+// Original in-memory implementation — superseded by token_bucket.lua for atomic
+// distributed operation. Kept for reference / to show the project's evolution.
 
+package rate_limiter.bucket;
 import java.time.Duration;
 import java.time.Instant;
 
