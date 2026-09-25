@@ -32,7 +32,7 @@ public class RateLimiterService {
                 keys,
                 String.valueOf(currentTimestamp),
                 String.valueOf(10),
-                String.valueOf(0)
+                String.valueOf(5)
         );
         return result == 1;
     }
